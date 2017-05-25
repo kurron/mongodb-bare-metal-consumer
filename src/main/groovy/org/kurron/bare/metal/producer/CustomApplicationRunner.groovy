@@ -51,31 +51,19 @@ class CustomApplicationRunner implements ApplicationRunner {
         def messageCount = Optional.ofNullable(arguments.getOptionValues('number-of-messages')).orElse(['100'])
         def messageSize = Optional.ofNullable(arguments.getOptionValues('payload-size')).orElse(['1024'])
 
-        def numberOfMessages = messageCount.first().toInteger()
-        def payloadSize = messageSize.first().toInteger()
-
-        log.info "Inserting ${numberOfMessages} messages with a binary payload size of ${payloadSize} to the database"
-
-
-        def messages = (1..numberOfMessages).collect {
-            def buffer = new byte[payloadSize]
-            randomize( buffer )
-            createModel( buffer )
-        }
-
-        log.info "Created ${messages.size()} messages. Sending them to stream."
-
         long start = System.currentTimeMillis()
         def criteria = new Criteria().where( '_id' ).exists( true )
         def stream = theTemplate.stream( new Query( criteria ), Model )
-        def completed = 0
-        stream.forEachRemaining( { println it.primaryKey } )
+        long totalBytes = 0
+        int totalDocuments = 0
+        def tracker = { Model model -> totalDocuments++ ; totalBytes += model.randomBytes.size() }
+        stream.forEachRemaining( tracker )
         long stop = System.currentTimeMillis()
 
         long duration = stop - start
-        log.info('Inserted {} messages in {} milliseconds', completed, duration )
+        log.info('Read {} messages in {} milliseconds for a total payload of {} bytes', totalDocuments, duration, totalBytes )
 
-        log.info 'Insertions complete'
+        log.info 'Query complete'
         theContext.close()
     }
 }
