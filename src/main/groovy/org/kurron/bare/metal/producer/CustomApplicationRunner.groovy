@@ -6,6 +6,8 @@ import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.data.mongodb.core.MongoTemplate
+import org.springframework.data.mongodb.core.query.Criteria
+import org.springframework.data.mongodb.core.query.Query
 
 import java.util.concurrent.ThreadLocalRandom
 
@@ -64,9 +66,10 @@ class CustomApplicationRunner implements ApplicationRunner {
         log.info "Created ${messages.size()} messages. Sending them to stream."
 
         long start = System.currentTimeMillis()
-        long completed = messages.parallelStream()
-                                 .map({ theTemplate.insert( it ) } )
-                                 .count()
+        def criteria = new Criteria().where( '_id' ).exists( true )
+        def stream = theTemplate.stream( new Query( criteria ), Model )
+        def completed = 0
+        stream.forEachRemaining( { println it.primaryKey } )
         long stop = System.currentTimeMillis()
 
         long duration = stop - start
