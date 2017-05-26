@@ -9,6 +9,8 @@ import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 
+import java.time.Duration
+
 /**
  * Handles command-line arguments.
  */
@@ -34,17 +36,17 @@ class CustomApplicationRunner implements ApplicationRunner {
 
         long totalBytes = 0
         int totalDocuments = 0
+        def tracker = { Model model -> totalDocuments++ ; totalBytes += model.randomBytes.size() }
 
         long start = System.currentTimeMillis()
         def stream = theTemplate.stream( new Query( new Criteria() ).limit( limit.first() as Integer ), Model )
-        def tracker = { Model model -> totalDocuments++ ; totalBytes += model.randomBytes.size() }
         stream.forEachRemaining( tracker )
         long stop = System.currentTimeMillis()
 
-        long duration = stop - start
-        log.info( 'Read {} messages in {} milliseconds for a total payload of {} bytes', totalDocuments, duration, totalBytes )
+        long durationMillis = stop - start
+        def durationISO = Duration.ofMillis( durationMillis )
+        log.info( 'Reading {} documents totalling {} bytes in size has taken {}', totalDocuments, totalBytes, durationISO as String )
 
-        log.info 'Query complete'
         theContext.close()
     }
 }
