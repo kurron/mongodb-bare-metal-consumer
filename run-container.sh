@@ -4,13 +4,11 @@ URI=${1:-mongodb://experiment:experiment@benchmarking-shard-00-00-annli.mongodb.
 MESSAGE_COUNT=${2:-16777216}
 
 CMD="docker run \
-            --cpus 1 \
             --env spring_data_mongodb_uri=${URI} \
             --interactive  \
             --name mongodb-producer \
             --network host \
             --rm \
-            --tty \
             kurron/mongodb-bare-metal-consumer:latest \
             --number-of-messages-to-read=${MESSAGE_COUNT}"
 
