@@ -1,27 +1,18 @@
 #!/bin/bash
 
-HOST=${1:-localhost}
-VHOST=${2:-/}
-USERNAME=${3:-guest}
-PASSWORD=${4:-guest}
-MESSAGE_COUNT=${5:-2500}
-PAYLOAD_SIZE=${6:-1024}
+URI=${1:-mongodb://experiment:experiment@benchmarking-shard-00-00-annli.mongodb.net:27017,benchmarking-shard-00-01-annli.mongodb.net:27017,benchmarking-shard-00-02-annli.mongodb.net:27017/bare-metal-producer?ssl=true&replicaSet=benchmarking-shard-0&authSource=admin&journal=true&w=1&readConcernLevel=local&readPreference=secondaryPreferred&appName=bare-metal-producer}
+MESSAGE_COUNT=${2:-16777216}
 
 CMD="docker run \
             --cpus 1 \
-            --env consumer_modvalue=1000 \
-            --env spring_rabbitmq_host=${HOST} \
-            --env spring_rabbitmq_virtual-host=${VHOST} \
-            --env spring.rabbitmq.username=${USERNAME} \
-            --env spring.rabbitmq.password=${PASSWORD} \
+            --env spring_data_mongodb_uri=${URI} \
             --interactive  \
-            --name amqp-producer \
+            --name mongodb-producer \
             --network host \
             --rm \
             --tty \
-            kurron/amqp-bare-metal-producer:latest \
-            --number-of-messages=${MESSAGE_COUNT} \
-            --payload-size=${PAYLOAD_SIZE}"
+            kurron/mongodb-bare-metal-consumer:latest \
+            --number-of-messages-to-read=${MESSAGE_COUNT}"
 
 echo ${CMD}
 ${CMD}

@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 
 import java.time.Duration
+import java.util.function.Consumer
 
 /**
  * Handles command-line arguments.
@@ -36,7 +37,7 @@ class CustomApplicationRunner implements ApplicationRunner {
 
         long totalBytes = 0
         int totalDocuments = 0
-        def tracker = { Model model -> totalDocuments++ ; totalBytes += model.randomBytes.size() }
+        def tracker = { Model model -> totalDocuments++ ; totalBytes += model.randomBytes.size() } as Consumer<Model>
 
         long start = System.currentTimeMillis()
         def stream = theTemplate.stream( new Query( new Criteria() ).limit( limit.first() as Integer ), Model )
