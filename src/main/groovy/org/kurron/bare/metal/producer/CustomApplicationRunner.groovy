@@ -48,12 +48,11 @@ class CustomApplicationRunner implements ApplicationRunner {
     @Override
     void run(ApplicationArguments arguments) {
 
-        def messageCount = Optional.ofNullable(arguments.getOptionValues('number-of-messages')).orElse(['100'])
-        def messageSize = Optional.ofNullable(arguments.getOptionValues('payload-size')).orElse(['1024'])
+        List<String> limit = Optional.ofNullable( arguments.getOptionValues('number-of-messages-to-read') ).orElse( ['100'] )
 
         long start = System.currentTimeMillis()
-        def criteria = new Criteria().where( '_id' ).exists( true )
-        def stream = theTemplate.stream( new Query( criteria ), Model )
+        def criteria = new Criteria()
+        def stream = theTemplate.stream( new Query( criteria ).limit( limit.first() as Integer ), Model )
         long totalBytes = 0
         int totalDocuments = 0
         def tracker = { Model model -> totalDocuments++ ; totalBytes += model.randomBytes.size() }
@@ -61,7 +60,7 @@ class CustomApplicationRunner implements ApplicationRunner {
         long stop = System.currentTimeMillis()
 
         long duration = stop - start
-        log.info('Read {} messages in {} milliseconds for a total payload of {} bytes', totalDocuments, duration, totalBytes )
+        log.info( 'Read {} messages in {} milliseconds for a total payload of {} bytes', totalDocuments, duration, totalBytes )
 
         log.info 'Query complete'
         theContext.close()
